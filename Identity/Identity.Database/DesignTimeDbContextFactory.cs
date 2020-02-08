@@ -12,7 +12,7 @@ namespace Identity.Database
     {
         public TContext CreateDbContext(string[] args)
         {
-            return Create(Directory.GetCurrentDirectory(), Environment.GetEnvironmentVariable("DOTNET_ENVIRONMENT"));
+            return Create(Directory.GetParent(Directory.GetCurrentDirectory()) + "/Identity.Api", Environment.GetEnvironmentVariable("DOTNET_ENVIRONMENT"));
         }
 
         protected string ConnectionString;
