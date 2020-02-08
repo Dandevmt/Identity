@@ -33,8 +33,7 @@ namespace Identity.Api.Controllers
             _events = events;
         }
 
-        [Route("api/[controller]")]
-        public async Task<IActionResult> Post([FromBody]RegisterDto dto)
+        public async Task<IActionResult> Register([FromBody]RegisterDto dto)
         {
             if (!ModelState.IsValid)
             {
