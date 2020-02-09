@@ -30,7 +30,7 @@ namespace Identity.Tests.Api.Controllers
         [Fact]
         public async Task Post_Register()
         {
-            var registerDto = new RegisterDto()
+            var registerDto = new RegisterInputDto()
             {
                 Email = "John@abcdef.com",
                 Password = "P1@fon",

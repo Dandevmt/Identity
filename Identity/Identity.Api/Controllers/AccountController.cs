@@ -2,6 +2,8 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using Identity.Api.Application.Account;
+using Identity.Api.Application.Config;
 using Identity.Api.DTO;
 using Identity.Api.ViewModels;
 using Identity.Database;
@@ -16,40 +18,27 @@ namespace Identity.Api.Controllers
 {
     public class AccountController : Controller
     {
-        private readonly SignInManager<AppUser> _signInManager;
-        private readonly IIdentityServerInteractionService _interaction;
-        private readonly IAuthenticationSchemeProvider _schemeProvider;
-        private readonly UserManager<AppUser> _userManager;
-        private readonly AppIdentityDbContext _appIdentityDbContext;
-        private readonly IEventService _events;
+        private readonly SignInManager<AppUser> signInManager;
+        private readonly IIdentityServerInteractionService interaction;
+        private readonly IAuthenticationSchemeProvider schemeProvider;
+        private readonly UserManager<AppUser> userManager;
+        private readonly AppIdentityDbContext appIdentityDbContext;
+        private readonly IEventService events;
 
         public AccountController(SignInManager<AppUser> signInManager, IIdentityServerInteractionService interaction, IAuthenticationSchemeProvider schemeProvider, UserManager<AppUser> userManager, AppIdentityDbContext appIdentityDbContext, IEventService events)
         {
-            _signInManager = signInManager;
-            _interaction = interaction;
-            _schemeProvider = schemeProvider;
-            _userManager = userManager;
-            _appIdentityDbContext = appIdentityDbContext;
-            _events = events;
+            this.signInManager = signInManager;
+            this.interaction = interaction;
+            this.schemeProvider = schemeProvider;
+            this.userManager = userManager;
+            this.appIdentityDbContext = appIdentityDbContext;
+            this.events = events;
         }
 
-        public async Task<IActionResult> Register([FromBody]RegisterDto dto)
+        public async Task<IActionResult> Register([FromBody]RegisterInputDto dto)
         {
-            if (!ModelState.IsValid)
-            {
-                return BadRequest(ModelState);
-            }
-
-            var user = new AppUser { UserName = dto.Email, Email = dto.Email };
-
-            var result = await _userManager.CreateAsync(user, dto.Password);
-
-            if (!result.Succeeded) return BadRequest(result.Errors);
-
-            await _userManager.AddClaimAsync(user, new System.Security.Claims.Claim("userName", user.UserName));
-            await _userManager.AddClaimAsync(user, new System.Security.Claims.Claim("email", user.Email));
-
-            return Ok(user);
+            var result = await new RegisterAccountHandler(userManager).Handle(dto);
+            return Ok(result);
         }
 
         /// <summary>
@@ -58,8 +47,8 @@ namespace Identity.Api.Controllers
         [HttpGet]
         public async Task<IActionResult> Login(string returnUrl)
         {
-            var context = await _interaction.GetAuthorizationContextAsync(returnUrl);
-
+            var context = await interaction.GetAuthorizationContextAsync(returnUrl);
+            
             return View(new LoginViewModel
             {
                 ReturnUrl = returnUrl,
@@ -73,75 +62,25 @@ namespace Identity.Api.Controllers
         /// </summary>
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Login(LoginDto model)
+        public async Task<IActionResult> Login(LoginInputDto model)
         {
-            // check if we are in the context of an authorization request
-            var context = await _interaction.GetAuthorizationContextAsync(model.ReturnUrl);
+            var result = await new LoginHandler(signInManager, userManager, interaction, events, Url)
+                .Handle(model);
 
-            if (ModelState.IsValid)
+            if (result.Succeeded)
             {
-                // validate username/password
-                var user = await _userManager.FindByNameAsync(model.Username);
+                return Redirect(result.Value.ReturnUrl);
+            }               
 
-                if (user != null && await _userManager.CheckPasswordAsync(user, model.Password))
-                {
-                    await _events.RaiseAsync(new UserLoginSuccessEvent(user.UserName, user.Id, user.UserName));
-
-                    // only set explicit expiration here if user chooses "remember me". 
-                    // otherwise we rely upon expiration configured in cookie middleware.
-                    AuthenticationProperties props = null;
-                    if (AccountOptions.AllowRememberLogin && model.RememberLogin)
-                    {
-                        props = new AuthenticationProperties
-                        {
-                            IsPersistent = true,
-                            ExpiresUtc = DateTimeOffset.UtcNow.Add(AccountOptions.RememberMeLoginDuration)
-                        };
-                    };
-
-                    // issue authentication cookie with subject ID and username
-                    await HttpContext.SignInAsync(user.Id, user.UserName, props);
-
-                    if (context != null)
-                    {
-                        // we can trust model.ReturnUrl since GetAuthorizationContextAsync returned non-null
-                        return Redirect(model.ReturnUrl);
-                    }
-
-                    // request for a local page
-                    if (Url.IsLocalUrl(model.ReturnUrl))
-                    {
-                        return Redirect(model.ReturnUrl);
-                    }
-                    else if (string.IsNullOrEmpty(model.ReturnUrl))
-                    {
-                        return Redirect("~/");
-                    }
-                    else
-                    {
-                        // user might have clicked on a malicious link - should be logged
-                        throw new Exception("invalid return URL");
-                    }
-                }
-
-                await _events.RaiseAsync(new UserLoginFailureEvent(model.Username, "invalid credentials"));
-                ModelState.AddModelError(string.Empty, AccountOptions.InvalidCredentialsErrorMessage);
-            }
-
-            // something went wrong, show form with error 
-            var vm = new LoginViewModel
-            {
-                Username = model.Username,
-                RememberLogin = model.RememberLogin
-            };
-            return View(vm); ;
+            // something went wrong, show form 
+            return View(result); ;
         }
 
         [HttpGet]
         public async Task<IActionResult> Logout(string logoutId)
         {
-            await _signInManager.SignOutAsync();
-            var context = await _interaction.GetLogoutContextAsync(logoutId);
+            await signInManager.SignOutAsync();
+            var context = await interaction.GetLogoutContextAsync(logoutId);
             return Redirect(context.PostLogoutRedirectUri);
         }
 
