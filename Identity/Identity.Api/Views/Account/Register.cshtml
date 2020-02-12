@@ -1,0 +1,62 @@
+﻿@using Identity.Api.Application.Config
+@using Identity.Api.DTO
+@model RegisterViewModel
+
+@{ 
+    var vErrors = Model?.Output?.Errors?.FirstOrDefault(v => v.Code == Identity.Api.Application.Config.Errors.Validation().Code);
+    var validationErrors = vErrors?.Errors.Cast<FieldError>().GroupBy(e => e.Field).ToDictionary(e => e.Key, e => e.ToList()) ?? new Dictionary<string, List<FieldError>>();
+    var p = 20;
+}
+
+<div class="row">
+
+    <div class="col-sm-6">
+        <div>
+            <h2>Local Login</h2>
+
+            <form asp-route="Register" method="post" class="form-signin mt-4">
+
+                <fieldset>
+                    <div class="form-group">
+                        <label asp-for="Input.Email"></label>
+                        <input class="form-control" placeholder="Username" asp-for="Input.Email" autofocus>
+                        @if(validationErrors.TryGetValue("Email", out List<FieldError> errs))
+                        {
+                            @foreach(var err in errs)
+                            {
+                                <p class="text-danger">@err.Description</p>
+                            }
+                        }
+                    </div>
+                    <div class="form-group">
+                        <label asp-for="Input.Password"></label>
+                        <input type="password" class="form-control" placeholder="Password" asp-for="Input.Password" autocomplete="off">
+                        @if (validationErrors.TryGetValue("Password", out List<FieldError> errsp))
+                        {
+                            @foreach (var err in errsp)
+                            {
+                                <p class="text-danger">@err.Description</p>
+                            }
+                        }
+                    </div>
+                    <div class="form-group">
+                        <label asp-for="Input.ConfirmPassword"></label>
+                        <input type="password" class="form-control" placeholder="Password" asp-for="Input.ConfirmPassword" autocomplete="off">
+                        @if (validationErrors.TryGetValue("ConfirmPassword", out List<FieldError> errscp))
+                        {
+                            @foreach (var err in errscp)
+                            {
+                                <p class="text-danger">@err.Description</p>
+                            }
+                        }
+                    </div>
+                    <div class="form-group">
+                        <button class="btn btn-primary" name="button" value="login">Login</button>
+                        <button class="btn btn-default" name="button" value="cancel">Cancel</button>
+                    </div>
+                </fieldset>
+            </form>
+        </div>
+    </div>
+
+</div>

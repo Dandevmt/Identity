@@ -16,7 +16,7 @@ namespace Identity.Api.DTO
 
         public bool Validate(out ResultError errors)
         {
-            errors = Errors.Validation;
+            errors = Errors.Validation();
 
             if (string.IsNullOrWhiteSpace(Username))
                 errors.AddError(Errors.ValidationRequired(nameof(Username)));

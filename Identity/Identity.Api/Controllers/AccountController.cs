@@ -35,10 +35,28 @@ namespace Identity.Api.Controllers
             this.events = events;
         }
 
-        public async Task<IActionResult> Register([FromBody]RegisterInputDto dto)
+        [HttpGet]
+        public async Task<IActionResult> Register()
         {
-            var result = await new RegisterAccountHandler(userManager).Handle(dto);
-            return Ok(result);
+            return View();
+        }
+
+        [HttpPost]
+        public async Task<IActionResult> Register(RegisterViewModel vm)
+        {
+            var result = await new RegisterAccountHandler(userManager).Handle(vm.Input);
+
+            if (result.Succeeded)
+            {
+                return View("RegistrationComplete", vm.Input.Email);
+            }
+
+            vm = new RegisterViewModel()
+            {
+                Input = new RegisterInputDto() { Email = vm.Input.Email },
+                Output = result
+            };
+            return View(vm);
         }
 
         /// <summary>
@@ -62,10 +80,10 @@ namespace Identity.Api.Controllers
         /// </summary>
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Login(LoginInputDto model)
+        public async Task<IActionResult> Login(LoginInputDto dto)
         {
             var result = await new LoginHandler(signInManager, userManager, interaction, events, Url)
-                .Handle(model);
+                .Handle(dto);
 
             if (result.Succeeded)
             {
@@ -73,7 +91,7 @@ namespace Identity.Api.Controllers
             }               
 
             // something went wrong, show form 
-            return View(result); ;
+            return View(result);
         }
 
         [HttpGet]
@@ -86,6 +104,8 @@ namespace Identity.Api.Controllers
 
         private static string GetUserName(string returnUrl)
         {
+            if (returnUrl == null)
+                return null;
             const string parameter = "&userName=";
             return returnUrl.Contains("userName") ? returnUrl.Substring(returnUrl.IndexOf("&userName=") + parameter.Length) : null;
         }

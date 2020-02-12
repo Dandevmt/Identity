@@ -36,7 +36,12 @@ namespace Identity.Api
                 options.UseMySql(configuration.GetConnectionString("Identity"));
             });
 
-            services.AddIdentity<AppUser, IdentityRole>()
+            services.AddIdentity<AppUser, IdentityRole>(options => 
+            {
+                options.Password.RequireNonAlphanumeric = false;
+                options.User.RequireUniqueEmail = true;
+                options.SignIn.RequireConfirmedEmail = true;
+            })
             .AddEntityFrameworkStores<AppIdentityDbContext>();
 
             var builder = services.AddIdentityServer()
@@ -62,7 +67,7 @@ namespace Identity.Api
                 throw new Exception("need to configure key material");
             }
 
-            services.AddMvc();
+            services.AddControllersWithViews();
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
