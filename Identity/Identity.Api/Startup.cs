@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using Identity.Api.Application.Config;
+using Identity.Api.Application.Email;
 using Identity.Database;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
@@ -30,19 +31,23 @@ namespace Identity.Api
         // For more information on how to configure your application, visit https://go.microsoft.com/fwlink/?LinkID=398940
         public void ConfigureServices(IServiceCollection services)
         {
+            var appSettings = configuration.GetSection(nameof(AppSettings)).Get<AppSettings>();
+            services.AddSingleton(appSettings);
+
             string conn = configuration.GetConnectionString("Identity");
             services.AddDbContext<AppIdentityDbContext>(options => 
             {
                 options.UseMySql(configuration.GetConnectionString("Identity"));
             });
 
-            services.AddIdentity<AppUser, IdentityRole>(options => 
+            services.AddIdentity<AppUser, IdentityRole>(options =>
             {
                 options.Password.RequireNonAlphanumeric = false;
                 options.User.RequireUniqueEmail = true;
                 options.SignIn.RequireConfirmedEmail = true;
             })
-            .AddEntityFrameworkStores<AppIdentityDbContext>();
+            .AddEntityFrameworkStores<AppIdentityDbContext>()
+            .AddDefaultTokenProviders();
 
             var builder = services.AddIdentityServer()
               // this adds the operational data from DB (codes, tokens, consents)
@@ -57,6 +62,8 @@ namespace Identity.Api
               .AddInMemoryApiResources(ResourceConfig.GetApiResources())
               .AddInMemoryClients(ResourceConfig.GetClients(""))
               .AddAspNetIdentity<AppUser>();
+
+            services.AddSingleton<IEmailSender, EmailSender>(s => new EmailSender(appSettings.EmailConfig));
 
             if (environment.IsDevelopment())
             {
@@ -79,6 +86,8 @@ namespace Identity.Api
             }
 
             app.UseRouting();
+
+            app.UseAuthorization();
 
             app.UseIdentityServer();
 

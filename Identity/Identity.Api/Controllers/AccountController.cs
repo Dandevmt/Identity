@@ -4,6 +4,7 @@ using System.Linq;
 using System.Threading.Tasks;
 using Identity.Api.Application.Account;
 using Identity.Api.Application.Config;
+using Identity.Api.Application.Email;
 using Identity.Api.DTO;
 using Identity.Api.ViewModels;
 using Identity.Database;
@@ -24,8 +25,16 @@ namespace Identity.Api.Controllers
         private readonly UserManager<AppUser> userManager;
         private readonly AppIdentityDbContext appIdentityDbContext;
         private readonly IEventService events;
+        private readonly IEmailSender emailSender;
 
-        public AccountController(SignInManager<AppUser> signInManager, IIdentityServerInteractionService interaction, IAuthenticationSchemeProvider schemeProvider, UserManager<AppUser> userManager, AppIdentityDbContext appIdentityDbContext, IEventService events)
+        public AccountController(
+            SignInManager<AppUser> signInManager, 
+            IIdentityServerInteractionService interaction, 
+            IAuthenticationSchemeProvider schemeProvider, 
+            UserManager<AppUser> userManager, 
+            AppIdentityDbContext appIdentityDbContext, 
+            IEventService events,
+            IEmailSender emailSender)
         {
             this.signInManager = signInManager;
             this.interaction = interaction;
@@ -33,6 +42,7 @@ namespace Identity.Api.Controllers
             this.userManager = userManager;
             this.appIdentityDbContext = appIdentityDbContext;
             this.events = events;
+            this.emailSender = emailSender;
         }
 
         [HttpGet]
@@ -44,7 +54,8 @@ namespace Identity.Api.Controllers
         [HttpPost]
         public async Task<IActionResult> Register(RegisterViewModel vm)
         {
-            var result = await new RegisterAccountHandler(userManager).Handle(vm.Input);
+            string tokenUrl = Url.Action("ConfirmEmail", "Account", null, Request.Scheme) + "?token={0}&email={1}";
+            var result = await new RegisterAccountHandler(userManager, emailSender).Handle(vm.Input, tokenUrl);
 
             if (result.Succeeded)
             {
@@ -57,6 +68,14 @@ namespace Identity.Api.Controllers
                 Output = result
             };
             return View(vm);
+        }
+
+        [HttpGet]
+        public async Task<IActionResult> ConfirmEmail(string token, string email)
+        {
+            var result = await new ConfirmEmailHandler(userManager, signInManager).Handle(token, email);
+
+            return View(result);
         }
 
         /// <summary>

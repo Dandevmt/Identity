@@ -11,6 +11,16 @@ namespace Identity.Api.Application.Config
         private ICollection<ResultError> errors;
         public IReadOnlyCollection<ResultError> Errors { get { return errors.ToList(); } }
 
+        public IReadOnlyCollection<ResultError> AllErrors()
+        {
+            var errs = errors?.ToList() ?? new List<ResultError>();
+            foreach (var err in Errors)
+            {
+                errs.AddRange(err.AllErrors());
+            }
+            return errs;
+        }
+
         public ResultError(string code, string description)
         {
             this.Code = code;

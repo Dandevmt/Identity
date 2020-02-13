@@ -86,12 +86,12 @@ namespace Identity.Api.Application.Account
                 else
                 {
                     // user might have clicked on a malicious link - should be logged
-                    return Result<LoginOutputDto>.Fail(Errors.InvalidReturnUrl);
+                    return Result<LoginOutputDto>.Fail(Errors.InvalidReturnUrl());
                 }
             }
 
             await events.RaiseAsync(new UserLoginFailureEvent(dto.Username, "invalid credentials"));
-            return Result<LoginOutputDto>.Fail(Errors.InvalidCredentials);
+            return Result<LoginOutputDto>.Fail(Errors.InvalidCredentials());
         }
     }
 }

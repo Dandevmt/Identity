@@ -1,0 +1,29 @@
+﻿@model Identity.Api.Application.Config.Result<bool>
+@{ 
+    var errors = Model.AllErrors();
+    var x = 20;
+}
+
+    <div class="row">
+
+        @if (Model.Succeeded)
+        {
+            <div class="col-sm-6">
+                <div>
+                    Thank you, your email has been confirmed!
+                </div>
+            </div>
+        }
+        else
+        {
+            <div class="col-sm-6">
+                <div>There were errors validation your email</div>
+                @foreach(var error in errors)
+                {
+                    <div>@error.Code | @error.Description</div>
+                }
+            </div>
+        }
+
+
+    </div>
