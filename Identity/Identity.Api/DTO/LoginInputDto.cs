@@ -14,17 +14,17 @@ namespace Identity.Api.DTO
         public bool RememberLogin { get; set; }
         public string ReturnUrl { get; set; }
 
-        public bool Validate(out ResultError errors)
+        public bool Validate(out ICollection<ResultError> errors)
         {
-            errors = Errors.Validation();
+            errors = new List<ResultError>();
 
             if (string.IsNullOrWhiteSpace(Username))
-                errors.AddError(Errors.ValidationRequired(nameof(Username)));
+                errors.Add(Errors.ValidationRequired(nameof(Username)));
 
             if (string.IsNullOrWhiteSpace(Password))
-                errors.AddError(Errors.ValidationRequired(nameof(Password)));
+                errors.Add(Errors.ValidationRequired(nameof(Password)));
 
-            if (errors.Errors?.Count > 0)
+            if (errors.Count > 0)
                 return false;
 
             return true;

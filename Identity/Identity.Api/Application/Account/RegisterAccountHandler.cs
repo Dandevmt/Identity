@@ -27,7 +27,7 @@ namespace Identity.Api.Application.Account
 
         public async Task<Result<RegisterOutputDto>> Handle(RegisterInputDto input, string tokenUrlTemplate)
         {
-            if (!input.Validate(out ResultError validationErrors))
+            if (!input.Validate(out ICollection<ResultError> validationErrors))
                 return Result<RegisterOutputDto>.Fail(validationErrors);
 
             var appUser = new AppUser() { UserName = input.Email, Email = input.Email };
@@ -38,10 +38,10 @@ namespace Identity.Api.Application.Account
             {
                 if (result.Errors.Any(e => e.Code == "DuplicateEmail"))
                 {
-                    return Result<RegisterOutputDto>.Fail(Errors.Validation().AddError(Errors.ValidationEmailTaken(nameof(input.Email), input.Email)));
+                    return Result<RegisterOutputDto>.Fail(Errors.ValidationEmailTaken(nameof(input.Email), input.Email));
                 }
-                var errors = result.Errors.Select(e => new ResultError(e.Code, e.Description));
-                return Result<RegisterOutputDto>.Fail(Errors.IdentityError().AddErrors(errors));
+                var errors = result.Errors.Select(e => new ResultError(ErrorCategory.Identity, e.Code, e.Description));
+                return Result<RegisterOutputDto>.Fail(errors);
             }
 
             string token = await userManager.GenerateEmailConfirmationTokenAsync(appUser);

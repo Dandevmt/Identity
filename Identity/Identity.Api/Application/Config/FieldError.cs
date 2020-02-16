@@ -9,7 +9,7 @@ namespace Identity.Api.Application.Config
     {
         public string Field { get; }
 
-        public FieldError(string field, string code, string description) : base(code, description)
+        public FieldError(ErrorCategory category, string field, string code, string description) : base(category, code, description)
         {
             Field = field;
         }       

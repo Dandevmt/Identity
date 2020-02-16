@@ -32,8 +32,8 @@ namespace Identity.Api.Application.Account
 
             if (!result.Succeeded)
             {
-                var errors = result.Errors.Select(e => new ResultError(e.Code, e.Description));
-                return Result<bool>.Fail(Errors.IdentityError().AddErrors(errors));
+                var errors = result.Errors.Select(e => new ResultError(ErrorCategory.Identity, e.Code, e.Description));
+                return Result<bool>.Fail(errors);
             }
 
             // Sign the user in

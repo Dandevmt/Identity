@@ -3,9 +3,8 @@
 @model RegisterViewModel
 
 @{ 
-    var vErrors = Model?.Output?.Errors?.FirstOrDefault(v => v.Code == Identity.Api.Application.Config.Errors.Validation().Code);
-    var validationErrors = vErrors?.Errors.Cast<FieldError>().GroupBy(e => e.Field).ToDictionary(e => e.Key, e => e.ToList()) ?? new Dictionary<string, List<FieldError>>();
-    var p = 20;
+    var vErrors = Model?.Output?.Errors?.Where(e => e.Category == ErrorCategory.Validation)?.ToList();
+    var validationErrors = vErrors?.Cast<FieldError>().GroupBy(e => e.Field).ToDictionary(e => e.Key, e => e.ToList()) ?? new Dictionary<string, List<FieldError>>();
 }
 
 <div class="row">

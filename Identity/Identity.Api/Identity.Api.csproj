@@ -17,4 +17,8 @@
     <ProjectReference Include="..\Identity.Database\Identity.Database.csproj" />
   </ItemGroup>
 
+  <ItemGroup>
+    <Folder Include="wwwroot\img\" />
+  </ItemGroup>
+
 </Project>

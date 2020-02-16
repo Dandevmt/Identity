@@ -39,7 +39,7 @@ namespace Identity.Api.Application.Account
 
         public async Task<Result<LoginOutputDto>> Handle(LoginInputDto dto)
         {
-            if (!dto.Validate(out ResultError validationErrors))
+            if (!dto.Validate(out ICollection<ResultError> validationErrors))
                 return Result<LoginOutputDto>.Fail(validationErrors);
 
             // check if we are in the context of an authorization request
@@ -50,6 +50,11 @@ namespace Identity.Api.Application.Account
 
             if (user != null && await userManager.CheckPasswordAsync(user, dto.Password))
             {
+                if (await userManager.IsEmailConfirmedAsync(user) == false)
+                {
+                    return Result<LoginOutputDto>.Fail(Errors.EmailNotConfirmed());
+                }
+
                 await events.RaiseAsync(new UserLoginSuccessEvent(user.UserName, user.Id, user.UserName));
 
                 // only set explicit expiration here if user chooses "remember me". 

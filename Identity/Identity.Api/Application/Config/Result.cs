@@ -12,16 +12,6 @@ namespace Identity.Api.Application.Config
         private ICollection<ResultError> errors;
         public IReadOnlyCollection<ResultError> Errors { get { return errors?.ToList(); } }
 
-        public IReadOnlyCollection<ResultError> AllErrors()
-        {
-            var errs = errors?.ToList() ?? new List<ResultError>();
-            foreach(var err in Errors)
-            {
-                errs.AddRange(err.AllErrors());
-            }
-            return errs;
-        }
-
         public static Result<T> Success(T value)
         {
             return new Result<T>() { Succeeded = true, Value = value };
@@ -32,23 +22,29 @@ namespace Identity.Api.Application.Config
             return new Result<T>() { Succeeded = false, errors = new List<ResultError>() { error } };
         }
 
-        public static Result<T> Fail(string errorCode, string errorDescription)
+        public static Result<T> Fail(IEnumerable<ResultError> errors)
         {
-            return Fail(new ResultError(errorCode, errorDescription));
+            return new Result<T>() { Succeeded = false, errors = errors.ToList() };
         }
 
-        public void AddError(ResultError error)
+        public static Result<T> Fail(ErrorCategory category, string errorCode, string errorDescription)
+        {
+            return Fail(new ResultError(category, errorCode, errorDescription));
+        }
+
+        public Result<T> AddError(ResultError error)
         {
             Succeeded = false;
             if (errors == null)
                 errors = new List<ResultError>();
 
             errors.Add(error);
+            return this;
         }
 
-        public void AddErrror(string errorCode, string errorDescription)
+        public Result<T> AddErrror(ErrorCategory category, string errorCode, string errorDescription)
         {
-            AddError(new ResultError(errorCode, errorDescription));
+            return AddError(new ResultError(category, errorCode, errorDescription));
         }
 
 

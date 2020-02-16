@@ -1,8 +1,4 @@
 ﻿@model Identity.Api.Application.Config.Result<bool>
-@{ 
-    var errors = Model.AllErrors();
-    var x = 20;
-}
 
     <div class="row">
 
@@ -18,7 +14,7 @@
         {
             <div class="col-sm-6">
                 <div>There were errors validation your email</div>
-                @foreach(var error in errors)
+                @foreach(var error in Model.Errors)
                 {
                     <div>@error.Code | @error.Description</div>
                 }

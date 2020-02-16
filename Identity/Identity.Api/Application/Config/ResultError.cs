@@ -6,57 +6,15 @@ namespace Identity.Api.Application.Config
 {
     public class ResultError
     {
+        public ErrorCategory Category { get; private set; }
         public string Code { get; private set; }
         public string Description { get; private set; }
-        private ICollection<ResultError> errors;
-        public IReadOnlyCollection<ResultError> Errors { get { return errors.ToList(); } }
 
-        public IReadOnlyCollection<ResultError> AllErrors()
-        {
-            var errs = errors?.ToList() ?? new List<ResultError>();
-            foreach (var err in Errors)
-            {
-                errs.AddRange(err.AllErrors());
-            }
-            return errs;
-        }
-
-        public ResultError(string code, string description)
+        public ResultError(ErrorCategory category, string code, string description)
         {
             this.Code = code;
             this.Description = description;
-            this.errors = new List<ResultError>();
-        }
-
-        public ResultError(string code, string description, IEnumerable<ResultError> childErrors)
-        {
-            this.Code = code;
-            this.Description = description;
-            this.errors = childErrors.ToList();
-        }        
-
-        public ResultError AddError(ResultError error)
-        {
-            if (errors == null)
-                errors = new List<ResultError>();
-
-            errors.Add(error);
-
-            return this;
-        }
-
-        public ResultError AddError(string code, string description)
-        {
-            return AddError(new ResultError(code, description));
-        }
-
-        public ResultError AddErrors(IEnumerable<ResultError> errors)
-        {
-            foreach(var error in errors)
-            {
-                this.errors.Add(error);
-            }
-            return this;
+            this.Category = category;
         }
     }
 }

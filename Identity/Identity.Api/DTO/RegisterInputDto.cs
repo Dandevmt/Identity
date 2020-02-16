@@ -13,35 +13,35 @@ namespace Identity.Api.DTO
         public string Password { get; set; }
         public string ConfirmPassword { get; set; }
 
-        public bool Validate(out ResultError errors)
+        public bool Validate(out ICollection<ResultError> errors)
         {
-            errors = Errors.Validation();
+            errors = new List<ResultError>();
 
             if (string.IsNullOrWhiteSpace(Email))
-                errors.AddError(Errors.ValidationRequired(nameof(Email)));
+                errors.Add(Errors.ValidationRequired(nameof(Email)));
 
             if (Email != null && !Email.Contains("@"))
-                errors.AddError(Errors.ValidationInvalidEmail(nameof(Email)));            
+                errors.Add(Errors.ValidationInvalidEmail(nameof(Email)));            
 
             if (string.IsNullOrWhiteSpace(Password))
-                errors.AddError(Errors.ValidationRequired(nameof(Password)));
+                errors.Add(Errors.ValidationRequired(nameof(Password)));
 
             if (Password != null && Password.Length < 7)
-                errors.AddError(Errors.ValidationMinLength(nameof(Password), 7));
+                errors.Add(Errors.ValidationMinLength(nameof(Password), 7));
 
             if (Password != null && !Password.Any(c => char.IsUpper(c)))
-                errors.AddError(Errors.ValidationMustContainUpper(nameof(Password)));
+                errors.Add(Errors.ValidationMustContainUpper(nameof(Password)));
 
             if (Password != null && !Password.Any(c => char.IsLower(c)))
-                errors.AddError(Errors.ValidationMustContainLower(nameof(Password)));
+                errors.Add(Errors.ValidationMustContainLower(nameof(Password)));
 
             if (Password != null && !Password.Any(c => char.IsNumber(c)))
-                errors.AddError(Errors.ValidationMustContainNumber(nameof(Password)));
+                errors.Add(Errors.ValidationMustContainNumber(nameof(Password)));
 
             if (ConfirmPassword != Password)
-                errors.AddError(Errors.ValidationPasswordMismatch(nameof(ConfirmPassword)));
+                errors.Add(Errors.ValidationPasswordMismatch(nameof(ConfirmPassword)));
 
-            if (errors.Errors?.Count > 0)
+            if (errors.Count > 0)
                 return false;
 
             return true;
