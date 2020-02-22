@@ -6,6 +6,15 @@
         <div>
             <h2>Local Login</h2>
 
+            @if (Model.LoginOutput != null && Model.LoginOutput.Succeeded == false)
+            {
+                <h3>The following errors were encountered</h3>
+                foreach(var error in Model.LoginOutput.Errors)
+                {
+                    <p>@error.Category | @error.Code | @error.Description</p>
+                }
+            }
+
             <form asp-route="Login" method="post" class="form-signin mt-4">
                 <input type="hidden" asp-for="ReturnUrl" />
 

@@ -1,4 +1,6 @@
-﻿using System;
+﻿using Identity.Api.Application.Config;
+using Identity.Api.Application.DTO;
+using System;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 using System.Linq;
@@ -14,5 +16,6 @@ namespace Identity.Api.ViewModels
         public string ReturnUrl { get; set; }
         public bool AllowRememberLogin { get; set; } = true;
         public bool NewAccount { get; set; }
+        public Result<LoginOutputDto> LoginOutput { get; set; }
     }
 }

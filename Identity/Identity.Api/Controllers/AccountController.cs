@@ -114,10 +114,18 @@ namespace Identity.Api.Controllers
             if (result.Succeeded)
             {
                 return Redirect(result.Value.ReturnUrl);
-            }               
+            }
 
             // something went wrong, show form 
-            return View(result);
+            var vm = new LoginViewModel()
+            {
+                Username = dto.Username,
+                ReturnUrl = dto.ReturnUrl,
+                RememberLogin = dto.RememberLogin,
+                NewAccount = dto.ReturnUrl.Contains("newAccount"),
+                LoginOutput = result
+            };
+            return View(vm);
         }
 
         [HttpGet]
