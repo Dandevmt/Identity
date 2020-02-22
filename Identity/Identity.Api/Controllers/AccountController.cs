@@ -45,13 +45,15 @@ namespace Identity.Api.Controllers
             this.emailSender = emailSender;
         }
 
+        #region Account_Registration
         [HttpGet]
-        public async Task<IActionResult> Register()
+        public IActionResult Register()
         {
             return View();
         }
 
         [HttpPost]
+        [ValidateAntiForgeryToken]
         public async Task<IActionResult> Register(RegisterViewModel vm)
         {
             string tokenUrl = Url.Action("ConfirmEmail", "Account", null, Request.Scheme) + "?token={0}&email={1}";
@@ -69,7 +71,9 @@ namespace Identity.Api.Controllers
             };
             return View(vm);
         }
+        
 
+        #region Email_Confirmation
         [HttpGet]
         public async Task<IActionResult> ConfirmEmail(string token, string email)
         {
@@ -77,7 +81,10 @@ namespace Identity.Api.Controllers
 
             return View(result);
         }
+        #endregion
+        #endregion
 
+        #region Login_Logout
         /// <summary>
         /// Entry point into the login workflow
         /// </summary>
@@ -128,5 +135,6 @@ namespace Identity.Api.Controllers
             const string parameter = "&userName=";
             return returnUrl.Contains("userName") ? returnUrl.Substring(returnUrl.IndexOf("&userName=") + parameter.Length) : null;
         }
+#endregion
     }
 }
